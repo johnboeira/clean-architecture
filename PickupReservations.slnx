@@ -1,4 +1,7 @@
 <Solution>
   <Folder Name="/src/" />
+  <Folder Name="/src/3. Domain/">
+    <Project Path="src/3. Domain/PickupReservations.Domain/PickupReservations.Domain.csproj" />
+  </Folder>
   <Folder Name="/tests/" />
 </Solution>

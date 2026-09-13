@@ -12,7 +12,50 @@ Este é um projeto de treino. O primeiro recorte tem apenas um subdomínio: **Re
 
 O atendente da loja, que separa o item e acompanha se o cliente veio buscá-lo.
 
-## O que entra na primeira versão
+## Recorte atual — duas features
+
+Por enquanto, implementar somente uma feature de escrita e uma de leitura. As demais funcionalidades da primeira versão ficam para etapas posteriores.
+
+### Feature de escrita — Registrar reserva
+
+**Objetivo:** registrar os itens que o atendente separou para um cliente.
+
+**Entrada:** nome do cliente, descrição de um único tipo de item e quantidade inteira.
+
+**Saída:** identificador da reserva criada.
+
+**Critérios de aceite:**
+
+- Nome e descrição são obrigatórios; valores nulos, vazios ou compostos somente por espaços são inválidos.
+- A quantidade deve ser maior que zero.
+- O sistema gera o identificador e registra o instante de criação.
+- A reserva começa Aberta e seu vencimento é calculado como o instante de criação mais 15 minutos.
+- O atendente não informa o estado, o instante de criação nem o prazo.
+- A reserva deve ser persistida antes de confirmar o sucesso da operação.
+- Dados inválidos devem produzir uma falha explícita, sem persistir uma reserva.
+
+### Feature de leitura — Consultar reserva por identificador
+
+**Objetivo:** recuperar os dados de uma reserva previamente registrada.
+
+**Entrada:** identificador da reserva.
+
+**Saída:** identificador, nome do cliente, descrição do item, quantidade, estado registrado, instante de criação e instante de vencimento.
+
+**Critérios de aceite:**
+
+- Uma reserva existente deve retornar os dados persistidos correspondentes ao identificador informado.
+- Um identificador sem reserva correspondente deve produzir um resultado de recurso não encontrado.
+- A consulta não deve alterar nem persistir o estado da reserva.
+- A consulta deve continuar funcionando após reiniciar a aplicação, preservando os dados registrados.
+
+### Limites e conclusão do recorte atual
+
+Este recorte estará pronto quando for possível registrar uma reserva válida e consultá-la por identificador, com tratamento de dados inválidos e de recurso não encontrado.
+
+Listagem de reservas abertas, retirada, cancelamento e expiração automática não serão implementados agora. O vencimento será registrado, mas a transição automática para Expirada dependerá da implementação futura do Worker. Até essa etapa, a consulta retorna o estado persistido, que pode permanecer Aberta após o vencimento; isso é uma limitação temporária, não uma alteração das regras finais do produto.
+
+## Escopo completo da primeira versão — implementação em etapas
 
 - Registrar uma reserva com nome do cliente, descrição do item e quantidade.
 - Consultar uma reserva e listar as reservas abertas.
@@ -39,7 +82,7 @@ Se Ana buscar os cadernos antes das 14h15, o atendente confirma a retirada. Se e
 
 Não haverá controle de estoque, cadastro de produtos ou clientes, pagamento, notificações ou tela. O atendente verifica a disponibilidade e separa os itens fisicamente; o produto acompanha apenas a reserva.
 
-## Quando estará pronto
+## Quando a primeira versão completa estará pronta
 
 Será possível registrar e consultar uma reserva, confirmar uma retirada, cancelar e observar uma reserva expirar automaticamente. Uma reserva encerrada não poderá mudar de situação.
 

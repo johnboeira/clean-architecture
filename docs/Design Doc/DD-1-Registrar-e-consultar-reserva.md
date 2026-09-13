@@ -168,9 +168,11 @@ Extensions/
 | ReservationEntityConfiguration | Mapeamento do agregado para a tabela Reservations |
 | ReservationRepository | Adicionar o agregado ao contexto e expor SaveChangesAsync como operação separada |
 | ReservationQueries | Buscar por ID com AsNoTracking e projeção para o resultado da Application |
-| DependencyInjectionExtensions | Expor AddInfrastructureLayer e registrar as implementações |
+| DependencyInjectionExtensions | Expor AddInfrastructureLayer recebendo IConfiguration, ler e validar a conexão Reservations e registrar as implementações |
 
 Implementações concretas serão internal por padrão; somente a extensão necessária à composição será pública. DbContext, repositório e consultas terão escopo por requisição e compartilharão o mesmo contexto quando necessário.
+
+Program.cs passa builder.Configuration para AddInfrastructureLayer. A Infrastructure usa GetConnectionString("Reservations") e rejeita valores ausentes, vazios ou compostos somente por espaços antes de registrar o DbContext. Microsoft.Extensions.Configuration.Abstractions é uma dependência explícita da Infrastructure, com versão centralizada. IConfiguration não atravessa para Domain ou casos de uso da Application. Para esta única connection string não haverá classe de Options; Options Pattern poderá ser adotado quando houver configurações relacionadas, validação estruturada ou reutilização por serviços.
 
 ### Modelo de armazenamento
 
@@ -194,12 +196,11 @@ dotnet ef migrations has-pending-model-changes --project "src/4 - Infrastructure
 
 Para desfazer a última migration ainda não aplicada, usar dotnet ef migrations remove com os mesmos argumentos de projeto e inicialização. A geração já foi executada e a verificação confirmou que não há diferenças pendentes no modelo. O restore apontou NU1903 na dependência transitiva SQLitePCLRaw.lib.e_sqlite3 2.1.11; a atualização dessa dependência permanece pendente.
 
-O banco é preparado por aplicação explícita das migrations, usando o argumento --migrate da API. Esse modo aplica as migrations e encerra o processo sem iniciar o servidor. A Infrastructure expõe ApplyInfrastructureMigrationsAsync para a composição, sem expor DbContext à API. Não é utilizado EnsureCreated.
+Ao iniciar, a API aplica automaticamente as migrations pendentes antes de atender requisições. A Infrastructure expõe ApplyInfrastructureMigrationsAsync para a composição, sem expor DbContext à API. Se a aplicação das migrations falhar, a inicialização falha e o servidor não começa a atender. Não é utilizado EnsureCreated.
 
 Comandos para execução manual a partir da raiz do repositório, quando a compilação for autorizada (dotnet run compila por padrão):
 
 ```powershell
-dotnet run --project "src/1 - Presentation/PickupReservations.Api" -- --migrate
 dotnet run --project "src/1 - Presentation/PickupReservations.Api" --launch-profile http
 ```
 
@@ -262,7 +263,7 @@ Request:
 
 ### Composição e erros
 
-Program.cs é o Composition Root: chama AddApplicationLayer, AddInfrastructureLayer e AddPresentationLayer, ativa o middleware global com UseExceptionHandler antes da execução dos endpoints e mapeia as rotas. TimeProvider.System é registrado na composição. O modo --migrate aplica as migrations e encerra antes de servir requisições.
+Program.cs é o Composition Root: chama AddApplicationLayer, AddInfrastructureLayer e AddPresentationLayer, aplica as migrations automaticamente, ativa o middleware global com UseExceptionHandler e mapeia as rotas antes de iniciar o servidor. TimeProvider.System é registrado na composição.
 
 AddPresentationLayer registrará GlobalExceptionHandler com AddExceptionHandler<GlobalExceptionHandler>() e os serviços de ProblemDetails com AddProblemDetails().
 

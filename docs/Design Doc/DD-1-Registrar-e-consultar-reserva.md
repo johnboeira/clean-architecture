@@ -1,11 +1,10 @@
 # DD-1 — Registrar e consultar reserva
 
-Status: em preparação; implementação ainda não iniciada.
+Status: implementação ainda não iniciada.
 
 ## Fontes e fluxo de trabalho
 
 - Requisitos funcionais: [PRD-1](../PRDs/PRD-1.md).
-- Regras de desenvolvimento: [AGENTS.md](../../AGENTS.md).
 - Este documento é o local para ajustar as decisões técnicas destas duas features antes de implementar.
 - Novas features devem ter seu Design Doc preparado antes da implementação. Mudanças funcionais também devem ser refletidas no PRD correspondente.
 - O projeto de estudos não é referência para este design.
@@ -13,17 +12,6 @@ Status: em preparação; implementação ainda não iniciada.
 ## Escopo
 
 Implementar somente registrar reserva (escrita) e consultar reserva por identificador (leitura).
-
-Listagem, retirada, cancelamento, expiração automática, Worker, autenticação e frontend não fazem parte deste recorte. Autenticação não está especificada no PRD. O vencimento será armazenado, mas a consulta retornará o estado persistido, que poderá continuar Aberta após o prazo até a implementação da expiração automática.
-
-## Decisões confirmadas
-
-- Clean Architecture conforme o AGENTS.md.
-- ASP.NET Core com Minimal API, sem Controllers.
-- EF Core com SQLite em arquivo, preservando os dados entre reinicializações.
-- Projeto separado para contratos HTTP, conforme recomendação do AGENTS.md e autorização do usuário.
-- Domain em C# puro; falhas esperadas representadas por DomainException.
-- Nenhuma implementação, criação de testes ou execução de build faz parte da preparação deste documento.
 
 ## Projetos e referências
 
@@ -50,13 +38,12 @@ ReservationAggregate/
   ReservationStatus.cs
 ```
 
-- Entity e AggregateRoot usam as bases fornecidas no AGENTS.md.
 - Reservation deriva de AggregateRoot e constitui o único agregado deste recorte.
 - IDomainEvent é uma interface de domínio sem vínculo com bibliotecas de mensageria, necessária à base AggregateRoot.
-- DomainException recebe uma mensagem no construtor. Sua criação é exigida expressamente pelo AGENTS.md, mesmo sendo um tipo pequeno.
+- DomainException recebe uma mensagem no construtor.
 - ReservationStatus é um enum: Open, Collected, Cancelled e Expired. Somente Open será atribuído neste recorte.
 - Não haverá Domain Services, eventos concretos, tipos Result/DomainError nem pacote ErrorOr.
-- Não serão introduzidos Value Objects para encapsular isoladamente cada campo neste recorte. Caso necessários em evolução posterior, deverão derivar da base ValueObject especificada no AGENTS.md.
+- Não serão introduzidos Value Objects para encapsular isoladamente cada campo neste recorte. Caso necessários em evolução posterior, deverão derivar da base ValueObject.
 
 ### Propriedades de Reservation
 
@@ -70,7 +57,7 @@ ReservationAggregate/
 | CreatedAt | DateTimeOffset | Instante de criação em UTC |
 | ExpiresAt | DateTimeOffset | CreatedAt acrescido de 15 minutos |
 
-As propriedades próprias da reserva terão setters privados; leituras públicas serão expostas para os casos de uso e projeções necessários. Id seguirá a assinatura da base fornecida no AGENTS.md.
+As propriedades próprias da reserva terão setters privados; leituras públicas serão expostas para os casos de uso e projeções necessários. Id será herdado de Entity, com get e init públicos.
 
 ### Criação e invariantes
 
@@ -92,23 +79,22 @@ Reservations/
   Interfaces/
     IReservationRepository.cs
     IReservationQueries.cs
+  Models/
+    ReservationDetails.cs
   CreateReservation/
     CreateReservationCommand.cs
-    CreateReservationResult.cs
     CreateReservationCommandHandler.cs
   GetReservationById/
     GetReservationByIdQuery.cs
-    GetReservationByIdResult.cs
     GetReservationByIdQueryHandler.cs
 DependencyInjectionExtensions.cs
 ```
-
-Commands, Queries e resultados serão records com entrada e saída explícitas. Os handlers terão HandleAsync e receberão CancellationToken. Inicialmente serão chamados diretamente pelos endpoints via injeção de dependência; não há necessidade de introduzir um mediador.
+Commands, Queries e ReservationDetails serão records com entrada e saída explícitas para cada caso de uso. Os handlers terão HandleAsync e receberão CancellationToken. Inicialmente serão chamados diretamente pelos endpoints via injeção de dependência; não há necessidade de introduzir um mediador.
 
 ### Escrita
 
 - CreateReservationCommand: CustomerName, ItemDescription e Quantity.
-- CreateReservationResult: Id.
+- Saída do handler: Task<Guid>, contendo o identificador criado, sem um tipo Result intermediário.
 - CreateReservationCommandHandler: obter o instante atual, invocar Reservation.Create, adicionar a reserva pelo repositório, confirmar a unidade de trabalho e devolver o Id.
 - IReservationRepository: adicionar uma Reservation à unidade de trabalho; não confirmar a transação dentro do repositório.
 - IUnitOfWork: SaveChangesAsync(CancellationToken).
@@ -118,9 +104,9 @@ Proposta para o relógio: injetar TimeProvider, da biblioteca padrão do .NET, n
 ### Leitura
 
 - GetReservationByIdQuery: Id.
-- GetReservationByIdResult: Id, CustomerName, ItemDescription, Quantity, Status, CreatedAt e ExpiresAt.
-- GetReservationByIdQueryHandler: consultar IReservationQueries e retornar o resultado ou null quando ausente.
-- IReservationQueries: GetByIdAsync(Guid id, CancellationToken), retornando GetReservationByIdResult ou null.
+- ReservationDetails: modelo de leitura em Reservations/Models na Application, contendo Id, CustomerName, ItemDescription, Quantity, Status, CreatedAt e ExpiresAt.
+- GetReservationByIdQueryHandler: consultar IReservationQueries e retornar Task<ReservationDetails?>; null representa reserva ausente.
+- IReservationQueries: GetByIdAsync(Guid id, CancellationToken), retornando Task<ReservationDetails?>.
 
 O estado pode usar ReservationStatus no resultado interno da Application. A borda HTTP o converte para o contrato externo. A leitura projeta os dados diretamente, sem exigir a materialização de Reservation e sem executar SaveChangesAsync.
 
@@ -128,7 +114,7 @@ DependencyInjectionExtensions expõe AddApplicationLayer e registra os handlers.
 
 ## Infrastructure e persistência
 
-```text
+```te
 Common/Persistence/
   ReservationsDbContext.cs
   Migrations/
@@ -230,7 +216,7 @@ DomainExceptionHandler tratará DomainException de forma centralizada. Exceçõe
 6. Implementar contratos, Minimal API, composição e tratamento de erros.
 7. Verificar os critérios de aceite conforme as autorizações de execução e testes.
 
-Não criar classes auxiliares pequenas com único uso nem aumentar artificialmente sua quantidade de linhas. As bases expressamente exigidas pelo AGENTS.md devem ser preservadas. Respeitar os limites de tamanho e solicitar autorização quando exigido pelo AGENTS.md.
+Não criar classes auxiliares pequenas com único uso nem aumentar artificialmente sua quantidade de linhas.
 
 ## Validação prevista
 

@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../2 - Application/PickupReservations.Application/PickupReservations.Application.csproj" />
+    <ProjectReference Include="../PickupReservations.Contracts/PickupReservations.Contracts.csproj" />
+    <ProjectReference Include="../../4 - Infrastructure/PickupReservations.Infrastructure/PickupReservations.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

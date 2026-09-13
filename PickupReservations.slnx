@@ -1,7 +1,29 @@
 <Solution>
   <Folder Name="/src/" />
-  <Folder Name="/src/3. Domain/">
-    <Project Path="src/3. Domain/PickupReservations.Domain/PickupReservations.Domain.csproj" />
+  <Folder Name="/src/1 - Presentation/">
+    <Project Path="src/1 - Presentation/PickupReservations.Api/PickupReservations.Api.csproj" />
+    <Project Path="src/1 - Presentation/PickupReservations.Contracts/PickupReservations.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/src/2 - Application/">
+    <Project Path="src/2 - Application/PickupReservations.Application/PickupReservations.Application.csproj" />
+  </Folder>
+  <Folder Name="/src/3 - Domain/">
+    <Project Path="src/3 - Domain/PickupReservations.Domain/PickupReservations.Domain.csproj" />
+  </Folder>
+  <Folder Name="/src/4 - Infrastructure/">
+    <Project Path="src/4 - Infrastructure/PickupReservations.Infrastructure/PickupReservations.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/" />
+  <Folder Name="/tests/1 - Presentation/">
+    <Project Path="tests/1 - Presentation/PickupReservations.Api.IntegrationTests/PickupReservations.Api.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/2 - Application/">
+    <Project Path="tests/2 - Application/PickupReservations.Application.UnitTests/PickupReservations.Application.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/3 - Domain/">
+    <Project Path="tests/3 - Domain/PickupReservations.Domain.UnitTests/PickupReservations.Domain.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/5 - Architecture/">
+    <Project Path="tests/5 - Architecture/PickupReservations.ArchitectureTests/PickupReservations.ArchitectureTests.csproj" />
+  </Folder>
 </Solution>

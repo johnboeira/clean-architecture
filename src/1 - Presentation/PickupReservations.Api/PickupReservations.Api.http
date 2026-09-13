@@ -1,0 +1,69 @@
+@baseUrl = http://localhost:5080
+@reservationId = 00000000-0000-0000-0000-000000000000
+
+### Criar reserva: esperado 201, body com id e header Location.
+# Copie o id retornado para @reservationId antes de executar a consulta.
+POST {{baseUrl}}/reservations
+Content-Type: application/json
+
+{
+  "customerName": "Ana",
+  "itemDescription": "Caderno",
+  "quantity": 2
+}
+
+### Consultar: esperado 200 com os dados da criação.
+# Repita após reiniciar a API para verificar a persistência.
+GET {{baseUrl}}/reservations/{{reservationId}}
+
+### Nome inválido: esperado 400 com ProblemDetails.
+POST {{baseUrl}}/reservations
+Content-Type: application/json
+
+{
+  "customerName": " ",
+  "itemDescription": "Caderno",
+  "quantity": 2
+}
+
+### Descrição inválida: esperado 400 com ProblemDetails.
+POST {{baseUrl}}/reservations
+Content-Type: application/json
+
+{
+  "customerName": "Ana",
+  "itemDescription": null,
+  "quantity": 2
+}
+
+### Quantidade zero: esperado 400 com ProblemDetails.
+POST {{baseUrl}}/reservations
+Content-Type: application/json
+
+{
+  "customerName": "Ana",
+  "itemDescription": "Caderno",
+  "quantity": 0
+}
+
+### Quantidade negativa: esperado 400 com ProblemDetails.
+POST {{baseUrl}}/reservations
+Content-Type: application/json
+
+{
+  "customerName": "Ana",
+  "itemDescription": "Caderno",
+  "quantity": -1
+}
+
+### Reserva inexistente: esperado 404.
+GET {{baseUrl}}/reservations/00000000-0000-0000-0000-000000000000
+
+### Identificador malformado: esperado 400.
+GET {{baseUrl}}/reservations/id-invalido
+
+### JSON inválido: esperado 400.
+POST {{baseUrl}}/reservations
+Content-Type: application/json
+
+{ "quantity":

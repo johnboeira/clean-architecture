@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../src/3 - Domain/PickupReservations.Domain/PickupReservations.Domain.csproj" />
+    <ProjectReference Include="../../../src/2 - Application/PickupReservations.Application/PickupReservations.Application.csproj" />
+    <ProjectReference Include="../../../src/4 - Infrastructure/PickupReservations.Infrastructure/PickupReservations.Infrastructure.csproj" />
+    <ProjectReference Include="../../../src/1 - Presentation/PickupReservations.Contracts/PickupReservations.Contracts.csproj" />
+    <ProjectReference Include="../../../src/1 - Presentation/PickupReservations.Api/PickupReservations.Api.csproj" />
+  </ItemGroup>
+</Project>
